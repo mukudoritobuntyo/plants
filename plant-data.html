@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>植物データ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f8f0;
+        }
+        h1 {
+            color: #105312;
+        }
+        pre {
+            background-color: white;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <h1>植物データ</h1>
+    <a href="menu.html">メニューへ</a> | 
+    <a href="main.html">メインページ</a> | 
+    <a href="index.html">植物登録・管理</a> | 
+    <a href="calendar.html">カレンダー</a>
+    <pre id="plant-data"></pre>
+
+    <script>
+        // ローカルストレージから植物データを読み込む
+        const plants = JSON.parse(localStorage.getItem("plants")) || [];
+
+        // 植物データをテキストとして表示する
+        function displayPlantData() {
+            const dataElement = document.getElementById("plant-data");
+            if (plants.length === 0) {
+                dataElement.textContent = "登録された植物データがありません。";
+            } else {
+                // JSON.stringifyを使用して、配列を整形されたJSON文字列に変換
+                const formattedData = JSON.stringify(plants, null, 2);
+                dataElement.textContent = formattedData;
+            }
+        }
+
+        // ページ読み込み時に植物データを表示
+        window.onload = displayPlantData;
+    </script>
+</body>
+</html>

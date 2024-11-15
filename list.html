@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>植物管理アプリ - 作業履歴</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1, h2 { color: #2c5e2e; }
+        button { margin: 5px; padding: 10px; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #4CAF50; color: white; }
+        .sort-btn { background-color: #008CBA; color: white; border: none; padding: 5px 10px; }
+    </style>
+</head>
+<body>
+    <h1>植物管理アプリ - 作業履歴</h1>
+    
+    <div>
+        <button onclick="showList('lastWatered')">水やり</button>
+        <button onclick="showList('lastFertilized')">肥料やり</button>
+        <button onclick="showList('lastRepotted')">植え替え</button>
+    </div>
+
+    <h2 id="listTitle"></h2>
+    <button id="sortBtn" class="sort-btn" onclick="toggleSort()">古い順に並べ替え</button>
+    <table id="plantList">
+        <thead>
+            <tr>
+                <th>植物名</th>
+                <th>最終作業日</th>
+                <th>経過日数</th>
+            </tr>
+        </thead>
+        <tbody id="plantListBody"></tbody>
+    </table>
+
+    <script>
+        let currentAction = 'lastWatered';
+        let isAscending = false;
+
+        function showList(action) {
+            currentAction = action;
+            const plants = JSON.parse(localStorage.getItem('plants')) || [];
+            const listTitle = document.getElementById('listTitle');
+            const listBody = document.getElementById('plantListBody');
+            
+            listTitle.textContent = getActionName(action) + 'の履歴';
+            
+            // 植物データをソート
+            const sortedPlants = sortPlants(plants, action);
+
+            // テーブルの内容を更新
+            listBody.innerHTML = '';
+            sortedPlants.forEach(plant => {
+                if (plant[action]) {
+                    const row = listBody.insertRow();
+                    row.insertCell(0).textContent = plant.name;
+                    row.insertCell(1).textContent = new Date(plant[action]).toLocaleDateString();
+                    row.insertCell(2).textContent = getDaysSince(plant[action]) + '日前';
+                }
+            });
+
+            updateSortButtonText();
+        }
+
+        function sortPlants(plants, action) {
+            return plants.filter(plant => plant[action]).sort((a, b) => {
+                const dateA = new Date(a[action]);
+                const dateB = new Date(b[action]);
+                return isAscending ? dateA - dateB : dateB - dateA;
+            });
+        }
+
+        function toggleSort() {
+            isAscending = !isAscending;
+            showList(currentAction);
+        }
+
+        function updateSortButtonText() {
+            const sortBtn = document.getElementById('sortBtn');
+            sortBtn.textContent = isAscending ? '新しい順に並べ替え' : '古い順に並べ替え';
+        }
+
+        function getActionName(action) {
+            switch(action) {
+                case 'lastWatered': return '水やり';
+                case 'lastFertilized': return '肥料やり';
+                case 'lastRepotted': return '植え替え';
+                default: return '';
+            }
+        }
+
+        function getDaysSince(dateString) {
+            const date = new Date(dateString);
+            const today = new Date();
+            const diffTime = Math.abs(today - date);
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24) -1);
+        }
+
+        // 初期表示
+        showList('lastWatered');
+    </script>
+</body>
+</html>

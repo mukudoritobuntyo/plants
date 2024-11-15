@@ -1,0 +1,14 @@
+<!DOCUTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+    </head>
+    <body>
+        <h2>memo</h2>
+        <script>
+            let plants = JSON.parse(localStorage.getItem("plants")) || [];
+            alert(JSON.stringify(plants[3]['name']));
+        </script>
+    </body>
+</html>

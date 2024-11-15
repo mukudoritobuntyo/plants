@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>植物管理</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #105312;
+            background-color: rgb(191, 231, 218);
+        }
+        h2{
+            color: #267a2a;
+            margin: 0%;
+        }
+        p{
+            margin: 3%;
+        }
+        .box{
+            background-color: rgb(243, 247, 246);
+            padding: 1%;
+        }
+        .plant-list {
+            margin-top: 20px;
+        }
+        #plants {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .plant {
+            flex: 1 1 calc(25% - 20px); /* 3列に並べる */
+            max-width: calc(25% - 20px);
+            box-sizing: border-box;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        label {
+            display: block;
+            margin: 5px 0;
+        }
+        img{
+            width: 15px;
+            height: 15px;
+        }
+        button {
+            margin-top: 10px;
+        }
+        /* レスポンシブ対応 */
+        @media (max-width: 1280px) {
+            .plant {
+                flex: 1 1 calc(33.333% - 20px); /* 画面が狭い場合は3列 */
+                max-width: calc(33.333% - 20px);
+            }
+        }
+        @media (max-width: 768px) {
+            .plant {
+                flex: 1 1 calc(50% - 20px); /* 画面が狭い場合は2列 */
+                max-width: calc(50% - 20px);
+            }
+        }
+        @media (max-width: 480px) {
+            .plant {
+                flex: 1 1 100%; /* モバイルでは1列 */
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h1>植物管理</h1>
+
+<a href="menu.html">メニューへ</a> | 
+<a href="index.html">植物登録・管理</a> | 
+<a href="calendar.html">カレンダー</a> | 
+<a href="plant-data.html">植物データ表示</a>
+
+<div class="plant-list box" >
+    <h2>植物リスト</h2>
+    <div id="plants"></div>
+</div>
+
+<script>
+    const plantForm = document.getElementById("plant-form");
+    const plantNameInput = document.getElementById("plant-name");
+    const plantsDiv = document.getElementById("plants");
+
+    // ローカルストレージから植物データを読み込み
+    let plants = JSON.parse(localStorage.getItem("plants")) || [];
+
+    // 植物リストをローカルストレージに保存する関数
+    function savePlants() {
+        localStorage.setItem("plants", JSON.stringify(plants));
+    }
+
+    // 日付差を計算する関数（経過日数）
+    function calculateDaysAgo(date) {
+        if (!date) return "なし";
+        const now = new Date();
+        const lastDate = new Date(date);
+        const diffTime = Math.abs(now - lastDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24) -1);
+        return `${diffDays} 日前`;
+    }
+
+    // 植物を表示する関数
+    function renderPlants() {
+        plantsDiv.innerHTML = "";
+        plants.forEach((plant, index) => {
+            const plantDiv = document.createElement("div");
+            plantDiv.classList.add("plant");
+
+            plantDiv.innerHTML = `
+                <h3><img src="PNGfile/grass.png">${plant.name}</h3>
+                <p>
+                    <img src="PNGfile/water.png">
+                    水やり: ${plant.lastWatered ? plant.lastWatered : "記録なし"} (${calculateDaysAgo(plant.lastWatered)})
+                    <input type="date" id="water-date-${index}">
+                    <button onclick="waterPlant(${index})">登録</button>
+                </p>
+                <p>
+                    <img src="PNGfile/fertilizer.png">
+                    肥料　: ${plant.lastFertilized ? plant.lastFertilized : "記録なし"} (${calculateDaysAgo(plant.lastFertilized)})
+                    <input type="date" id="fertilize-date-${index}">
+                    <button onclick="fertilizePlant(${index})">登録</button>
+                </p>
+                <p>
+                        <img src="PNGfile/pot.png">
+                        植替　: ${plant.lastRepotted ? plant.lastRepotted : "記録なし"} (${calculateDaysAgo(plant.lastRepotted)})
+                        <input type="date" id="replanting-date-${index}">
+                        <button onclick="replantingPlant(${index})">登録</button>
+                </p>
+            `;
+            plantsDiv.appendChild(plantDiv);
+        });
+    }
+
+        // 水やりを記録する関数
+        function waterPlant(index) {
+        const dateInput = document.getElementById(`water-date-${index}`);
+        if (dateInput.value) {
+            plants[index].lastWatered = new Date(dateInput.value).toLocaleDateString("ja-JP");
+            savePlants();  // データを保存
+            renderPlants();
+        } else {
+            alert("日付を選択してください。");
+        }
+    }
+
+    // 肥料を記録する関数
+    function fertilizePlant(index) {
+        const dateInput = document.getElementById(`fertilize-date-${index}`);
+        if (dateInput.value) {
+            plants[index].lastFertilized = new Date(dateInput.value).toLocaleDateString("ja-JP");
+            savePlants();  // データを保存
+            renderPlants();
+        } else {
+            alert("日付を選択してください。");
+        }
+    }
+
+    // 植え替えを記録する関数
+    function replantingPlant(index) {
+        const dateInput = document.getElementById(`replanting-date-${index}`);
+        if (dateInput.value) {
+            plants[index].lastRepotted = new Date(dateInput.value).toLocaleDateString("ja-JP");
+            savePlants();  // データを保存
+            renderPlants();
+        } else {
+            alert("日付を選択してください。");
+        }
+    }
+
+    // 初期表示
+    renderPlants();
+</script>
+
+</body>
+</html>

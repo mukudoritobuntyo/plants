@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>植物管理アプリ - 登録と削除</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f0f8f0;}
+        input, button { margin: 10px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .delete-btn { background-color: #ff4d4d; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+        .rename-btn { background-color: #4CAF50; color: white; border: none; padding: 5px 10px; cursor: pointer; }
+        h1 {color: #105312;}
+        div{background-color: white; padding: 5px; border: 1px solid #ddd; border-radius: 5px;}
+    </style>
+</head>
+<body>
+    <h1>植物管理アプリ - 登録と削除</h1>
+    <a href="menu.html">メニューへ</a> | 
+    <a href="main.html">メインページ</a> | 
+    <a href="calendar.html">カレンダー</a> | 
+    <a href="plant-data.html">植物データ表示</a>
+
+    <p><hr></p>
+    <div>
+        <h2>植物の登録</h2>
+        <form id="plantForm">
+            <input type="text" id="plantName" placeholder="植物の名前" required>
+            <button type="submit">登録</button>
+        </form>
+        <hr>
+        <h2>登録済みの植物</h2>
+        <table id="plantList">
+            <tr>
+                <th>植物名</th>
+                <th>操作</th>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        function updatePlantList() {
+            const plants = JSON.parse(localStorage.getItem('plants')) || [];
+            const table = document.getElementById('plantList');
+
+            // ヘッダー行以外をクリア
+            while (table.rows.length > 1) {
+                table.deleteRow(1);
+            }
+
+            plants.forEach((plant, index) => {
+                const row = table.insertRow();
+                row.insertCell(0).textContent = plant.name;
+                const actionCell = row.insertCell(1);
+                actionCell.innerHTML = `
+                    <button class="rename-btn" onclick="renamePlant(${index})">名前変更</button>
+                    <button class="delete-btn" onclick="deletePlant(${index})">削除</button>
+                `;
+            });
+        }
+
+        function addPlant(name) {
+            let plants = JSON.parse(localStorage.getItem('plants')) || [];
+            plants.push({
+                name: name,
+                lastWatered: null,
+                lastFertilized: null,
+                lastRepotted: null
+            });
+            localStorage.setItem('plants', JSON.stringify(plants));
+            updatePlantList();
+        }
+
+        function deletePlant(index) {
+            if (confirm("本当にこの植物を削除しますか？")) {
+                let plants = JSON.parse(localStorage.getItem('plants')) || [];
+                plants.splice(index, 1);
+                localStorage.setItem('plants', JSON.stringify(plants));
+                updatePlantList();
+                alert('削除しました');
+            }
+        }
+
+        function renamePlant(index) {
+            let plants = JSON.parse(localStorage.getItem('plants')) || [];
+            const newName = prompt("新しい名前を入力してください:", plants[index].name);
+            if (newName !== null && newName.trim() !== "") {
+                plants[index].name = newName.trim();
+                localStorage.setItem('plants', JSON.stringify(plants));
+                updatePlantList();
+                alert('名前を変更しました');
+            }
+        }
+
+        document.getElementById('plantForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const plantName = document.getElementById('plantName').value;
+            addPlant(plantName);
+            document.getElementById('plantName').value = '';
+        });
+
+        updatePlantList();
+    </script>
+</body>
+</html>

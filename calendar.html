@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>植物管理アプリ - カレンダー</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f8f0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .calendar-day {
+            cursor: pointer;
+        }
+
+        .calendar-day:hover {
+            background-color: #f0f0f0;
+        }
+
+        .action-buttons,
+        .plant-list,
+        #weatherSelect {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .action-button,
+        .plant-item,
+        .weather-button {
+            margin: 2px;
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        .selected {
+            background-color: #77c879;
+            color: white;
+        }
+
+        .today {
+            font-weight: bold;
+        }
+
+        .sunny {
+            background-color: #ff9999;
+        }
+
+        .cloudy {
+            background-color: #E6E6E6;
+        }
+
+        .rainy {
+            background-color: #B3D9FF;
+        }
+
+        h1 {
+            color: #105312;
+        }
+
+        #white {
+            background-color: white;
+            padding: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>植物管理アプリ - カレンダー</h1>
+
+    <a href="menu.html">メニューへ</a> |
+    <a href="main.html">メインページ</a> |
+    <a href="index.html">植物登録・管理</a> |
+    <span>カレンダー | </span>
+    <a href="plant-data.html">植物データ表示</a>
+    <p>
+        <hr>
+    </p>
+
+    <div id="white">
+        <div id="calendar"></div>
+
+        <div id="weatherSelect">
+            <h3>天気を選択:</h3>
+            <button class="weather-button" onclick="setWeather('sunny')">晴れ</button>
+            <button class="weather-button" onclick="setWeather('cloudy')">曇り</button>
+            <button class="weather-button" onclick="setWeather('rainy')">雨</button>
+        </div>
+
+        <div id="actionButtons" class="action-buttons">
+            <h3>お世話を選択:</h3>
+            <button class="action-button" onclick="showPlants('lastWatered')">水やり</button>
+            <button class="action-button" onclick="showPlants('lastFertilized')">肥料やり</button>
+            <button class="action-button" onclick="showPlants('lastRepotted')">植え替え</button>
+        </div>
+        <div id="plantList" class="plant-list"></div>
+    </div>
+
+    <script>
+        let selectedDate;
+        let selectedAction;
+        let weatherData = JSON.parse(localStorage.getItem('weatherData')) || {};
+
+        function generateCalendar() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth();
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+
+            let html = '<table>';
+            html += '<tr><th colspan="7">' + year + '年' + (month + 1) + '月</th></tr>';
+            html += '<tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr>';
+
+            let date = 1;
+            for (let i = 0; i < 6; i++) {
+                html += '<tr>';
+                for (let j = 0; j < 7; j++) {
+                    if (i === 0 && j < firstDay.getDay()) {
+                        html += '<td></td>';
+                    } else if (date > lastDay.getDate()) {
+                        html += '<td></td>';
+                    } else {
+                        const currentDate = new Date(year, month, date);
+                        const dateString = currentDate.toISOString().split('T')[0];
+                        const isToday = currentDate.toDateString() === today.toDateString();
+                        const weatherClass = weatherData[dateString] || '';
+                        html += `<td class="calendar-day ${isToday ? 'today' : ''} ${weatherClass}" onclick="selectDate(${year}, ${month}, ${date})">${date}</td>`;
+                        date++;
+                    }
+                }
+                html += '</tr>';
+                if (date > lastDay.getDate()) break;
+            }
+            html += '</table>';
+            document.getElementById('calendar').innerHTML = html;
+        }
+
+        function selectDate(year, month, day) {
+            selectedDate = new Date(year, month, day);
+            document.getElementById('actionButtons').style.display = 'block';
+            document.getElementById('plantList').style.display = 'none';
+            document.getElementById('weatherSelect').style.display = 'block';
+        }
+
+        function showPlants(action) {
+            selectedAction = action;
+            const plants = JSON.parse(localStorage.getItem('plants')) || [];
+            let html = `<h2>${selectedDate.getFullYear()}年${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日の${getActionName(action)}</h2>`;
+            plants.forEach((plant, index) => {
+                const isSelected = plant[action] && new Date(plant[action]).toDateString() === selectedDate.toDateString();
+                html += `<div class="plant-item ${isSelected ? 'selected' : ''}" onclick="togglePlantAction(${index})">${plant.name}</div>`;
+            });
+            document.getElementById('plantList').innerHTML = html;
+            document.getElementById('plantList').style.display = 'block';
+        }
+
+        function togglePlantAction(index) {
+            const plants = JSON.parse(localStorage.getItem('plants'));
+            const dateToSave = new Date(selectedDate);
+            dateToSave.setDate(dateToSave.getDate() + 1); // 1日追加
+            const dateString = dateToSave.toISOString().split('T')[0]; // YYYY-MM-DD形式にフォーマット
+            plants[index][selectedAction] = dateString;
+            localStorage.setItem('plants', JSON.stringify(plants));
+            showPlants(selectedAction);
+        }
+
+        function getActionName(action) {
+            switch (action) {
+                case 'lastWatered': return '水やり';
+                case 'lastFertilized': return '肥料やり';
+                case 'lastRepotted': return '植え替え';
+                default: return '';
+            }
+        }
+
+        function setWeather(weather) {
+            const dateString = selectedDate.toISOString().split('T')[0];
+            weatherData[dateString] = weather;
+            localStorage.setItem('weatherData', JSON.stringify(weatherData));
+            generateCalendar();
+        }
+
+        generateCalendar();
+    </script>
+</body>
+
+</html>
